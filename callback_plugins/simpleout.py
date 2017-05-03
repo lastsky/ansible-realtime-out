@@ -1,6 +1,7 @@
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
+"""
+Render std err/out outside of the rest of the result which it prints with
+indentation.
+"""
 from ansible.plugins.callback.default import CallbackModule as CallbackModule_default
 from ansible import constants as C
 
@@ -28,9 +29,8 @@ class CallbackModule(CallbackModule_default):
 
         output = CallbackModule_default._dump_results(self, result)
 
-        for key in ['stdout', 'stderr', 'msg']:
-            if key in save and save[key]:
-                output += '%s\n' % (save[key])
+        output += "\n".join([save[key] for key in ['stdout', 'stderr', 'msg'] \
+                                     if key in save and save[key]])
 
         for key, value in save.items():
             result[key] = value
