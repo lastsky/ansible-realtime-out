@@ -1,0 +1,36 @@
+---
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  tasks:
+    - name: rm test.log
+      file: name={{ item }} state=absent
+      with_items:
+        - test.log
+        - test2.log
+    - name: touch test.log
+      file: name={{ item }} state=touch
+      with_items:
+        - test.log
+        - test2.log
+ 
+    - name: run shell
+      shell: |
+        sh -c "trap 'echo script_end >> test.log' EXIT ERR
+        for line in \$(seq 1 10); do
+        echo 'test line '\$line >> test.log; sleep 5;
+        done"
+      async: 100
+      poll: 0
+ 
+    - name: pipe stdout
+      shell: |
+        lc=$(sed -n '$=' test.log)
+        lc2=$(sed -n '$=' test2.log)
+        if ((lc > lc2)); then
+          tail -n $((lc-lc2)) test.log | tee -a test2.log
+        fi
+      register: pipe
+      until: pipe.stdout.find('script_end') != -1
+      retries: 100
+      delay: 1
