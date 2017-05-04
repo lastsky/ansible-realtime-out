@@ -3,25 +3,19 @@
   gather_facts: no
   connection: local
   tasks:
-    - name: rm test.log
-      file: name={{ item }} state=absent
-      with_items:
-        - test.log
-        - test2.log
-    - name: touch test.log
-      file: name={{ item }} state=touch
-      with_items:
-        - test.log
-        - test2.log
- 
     - name: run shell
       shell: |
-        trap 'echo script_end >> test.log' EXIT ERR
+        trap 'echo script_end >> test.log; rm test.pid' EXIT ERR SIGTERM SIGHUP SIGINT
+        [ -f test.pid ] && kill -9 $(cat test.pid)
+        echo $$ > test.pid
+        echo '' > test.log
+        echo '' > test2.log
+        # you shell script here:
         for line in $(seq 1 10); do
         echo test_line_${line} >> test.log
-        sleep 3
+        sleep 5
         done
-      async: 100
+      async: 500
       poll: 0
  
     - name: pipe stdout
@@ -33,5 +27,5 @@
         fi
       register: pipe
       until: pipe.stdout.find('script_end') != -1
-      retries: 100
+      retries: 500
       delay: 1
