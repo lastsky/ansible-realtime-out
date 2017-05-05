@@ -6,7 +6,7 @@
     - name: run shell
       shell: |
         trap 'echo script_end >> test.log; rm test.pid' EXIT
-        trap 'echo script_error >> test.log; rm test.pid' ERR SIGTERM SIGINT
+        trap 'echo script_error >> test.log' ERR SIGTERM SIGINT
         [ -f test.pid ] && kill -9 $(cat test.pid)
         echo $$ > test.pid
         echo -n > test.log
