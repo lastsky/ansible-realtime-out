@@ -9,9 +9,9 @@
         trap 'echo script_error >> test.log; rm test.pid' ERR SIGTERM SIGINT
         [ -f test.pid ] && kill -9 $(cat test.pid)
         echo $$ > test.pid
-        echo '' > test.log
-        echo '' > test2.log
-        # you shell script here:
+        echo -n > test.log
+        echo -n > test2.log
+        # you shell script is here:
         for line in $(seq 1 10); do
         echo test_line_${line} >> test.log
         sleep 5
@@ -23,9 +23,7 @@
       shell: |
         lc=$(sed -n '$=' test.log)
         lc2=$(sed -n '$=' test2.log)
-        if ((lc > lc2)); then
-          tail -n $((lc-lc2)) test.log | tee -a test2.log
-        fi
+        ((lc > lc2)) && tail -n $((lc-lc2)) test.log | tee -a test2.log
       register: pipe
       failed_when: pipe.stdout.find('script_error') != -1
       until: pipe.stdout.find('script_end') != -1
